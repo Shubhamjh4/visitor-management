@@ -1,0 +1,471 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Visitor Intake</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <style>
+        input::placeholder, textarea::placeholder {
+            color: #64748b !important;
+            opacity: 1 !important;
+        }
+        input, textarea {
+            background-color: white !important;
+            color: #0f172a !important;
+            border: 2px solid #e2e8f0 !important;
+        }
+        input:focus, textarea:focus {
+            background-color: #dbeafe !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+        }
+        [data-theme="dark"] input::placeholder,
+        [data-theme="dark"] textarea::placeholder {
+            color: #cbd5e1 !important;
+            opacity: 0.8 !important;
+        }
+        [data-theme="dark"] input,
+        [data-theme="dark"] textarea {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border: 2px solid #475569 !important;
+        }
+        [data-theme="dark"] input:focus,
+        [data-theme="dark"] textarea:focus {
+            background-color: #1e3a8a !important;
+            border-color: #3b82f6 !important;
+        }
+        
+        /* Email input specific styling */
+        #id_email::placeholder {
+            color: #64748b !important;
+            opacity: 1 !important;
+        }
+        
+        /* Send OTP button styling */
+        #send-otp-btn {
+            padding: 0.5rem 0.75rem !important;
+            font-size: 0.8rem !important;
+            min-width: 80px !important;
+            height: auto !important;
+        }
+        
+        /* Mobile Send OTP button */
+        @media (max-width: 576px) {
+            #send-otp-btn {
+                padding: 0.6rem 0.8rem !important;
+                font-size: 0.85rem !important;
+                min-width: 90px !important;
+            }
+            
+            /* Email input group mobile */
+            .input-group {
+                display: flex !important;
+                flex-direction: row !important;
+                width: 100% !important;
+            }
+            
+            #id_email {
+                flex: 1 !important;
+                font-size: 16px !important;
+                padding: 0.75rem 1rem !important;
+                border-radius: 8px 0 0 8px !important;
+            }
+            
+            #send-otp-btn {
+                flex-shrink: 0 !important;
+                border-radius: 0 8px 8px 0 !important;
+                padding: 0.75rem 1rem !important;
+                font-size: 0.9rem !important;
+                min-width: 100px !important;
+            }
+        }
+
+        /* Opaque suggestions dropdown */
+        #employee-suggestions {
+            background-color: #ffffff !important; /* solid panel */
+            border: 2px solid #e2e8f0 !important;
+            padding: 0 !important; /* no gaps around items */
+            border-radius: 0.75rem !important;
+            overflow-y: auto !important; /* allow scrolling to see full list */
+            top: calc(100% + 8px) !important; /* sit just below the input */
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            z-index: 1050 !important;
+            box-shadow: 0 12px 30px rgba(15,23,42,0.22) !important;
+        }
+        #employee-suggestions .list-group-item-action {
+            background-color: #ffffff !important;
+            border: 0 !important;
+            border-bottom: 1px solid #e5e7eb !important; /* subtle divider */
+            margin: 0 !important;
+            border-radius: 0 !important; /* unified panel look */
+            padding: 0.875rem 1rem !important;
+        }
+        #employee-suggestions .list-group-item-action:last-child {
+            border-bottom: 0 !important;
+        }
+        #employee-suggestions .list-group-item-action:focus,
+        #employee-suggestions .list-group-item-action:hover {
+            background-color: #dbeafe !important;
+        }
+        /* Input group spacing/tweaks so caret button doesn't collide or wrap */
+        .employee-input .input-group { position: relative; gap: 0 !important; }
+        .employee-input .input-group > .form-control {
+            border-right-width: 0 !important;
+        }
+        .employee-input .input-group > .btn {
+            border-left-width: 0 !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 0 0.5rem 0.5rem 0 !important;
+            height: auto !important;
+            line-height: 1 !important;
+        }
+        .employee-input { margin-bottom: 0.5rem; }
+        [data-theme="dark"] #employee-suggestions {
+            background-color: #0f172a !important;
+            border-color: #475569 !important;
+        }
+        [data-theme="dark"] #employee-suggestions .list-group-item-action {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+            border-bottom: 1px solid #334155 !important;
+        }
+    </style>
+</head>
+<body class="vm-bg">
+<!-- Theme Switcher -->
+<div class="theme-switcher">
+    <button class="theme-toggle-btn" id="themeToggle" title="Toggle Theme">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+</div>
+
+<div class="container py-5">
+    <div class="mx-auto vm-form-shell">
+        <div class="vm-brand text-center">
+            <img src="{% static 'img/logo.png' %}" alt="Logo" class="vm-logo">
+            <div class="vm-title">Visitor Check-in</div>
+        </div>
+        {% if active_visit %}
+        <div class="alert alert-warning d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-clock me-2"></i>
+                <div>
+                    <strong>Visit in Progress</strong><br>
+                    <small>Meeting with {{ active_visit.employee.name }}</small><br>
+                    <small class="fw-bold">Duration: <span id="banner-timer">--:--:--</span></small>
+                </div>
+            </div>
+            <a class="btn btn-sm btn-primary" href="{% url 'visit_detail' active_visit.id %}">
+                <i class="fas fa-external-link-alt me-1"></i>Open Visit
+            </a>
+        </div>
+        {% endif %}
+
+        <div class="vm-frame">
+            <div class="vm-accent-bar"></div>
+            <div class="card vm-card shadow-lg border-0">
+            <div class="card-body p-4 p-md-5" style="padding-top: 2rem;">
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-6 col-12 mb-2 mb-md-0">
+                        <span class="vm-badge vm-badge-info">
+                            <i class="fas fa-user me-1"></i>Guest Check-in
+                        </span>
+                    </div>
+                    <div class="col-md-6 col-12">
+                        <small class="text-muted d-flex align-items-center">
+                            <i class="fas fa-info-circle me-1"></i>Complete the form to start your visit
+                        </small>
+                    </div>
+                </div>
+                <div class="vm-divider"></div>
+                <form method="post" class="vm-form" id="intake-form">
+                    {% csrf_token %}
+                    <div class="row g-4" style="padding-top: 1rem;">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">{{ form.full_name.label }} <span class="text-danger">*</span></label>
+                            {{ form.full_name }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">{{ form.email.label }} <span class="text-danger">*</span></label>
+                            <div class="input-group" style="display: flex; flex-direction: row;">
+                                {{ form.email }}
+                                <button class="btn btn-outline-primary" id="send-otp-btn" name="action" value="send_otp" type="button" style="padding: 0.5rem 0.75rem; font-size: 0.8rem; min-width: 80px; flex-shrink: 0;">
+                                    <i class="fas fa-paper-plane me-1"></i><span class="d-none d-sm-inline">Send OTP</span><span class="d-sm-none">Send OTP</span>
+                                </button>
+                            </div>
+                            <div class="form-text mt-1">Enter email, then tap Send OTP.</div>
+                            <div id="email-error" class="text-danger small mt-1"></div>
+                        </div>
+                        <div class="col-12 {% if not otp_sent %}d-none{% endif %}" id="otp-block">
+                            <label class="form-label fw-semibold">{{ form.otp.label }}</label>
+                            {{ form.otp }}
+                            <div id="otp-feedback" class="{% if otp_sent %}alert alert-success mt-2 py-2{% else %}d-none{% endif %}">OTP sent to your email.</div>
+                            {% for error in form.otp.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">{{ form.address.label }} <span class="text-danger">*</span></label>
+                            {{ form.address }}
+                        </div>
+                        <div class="col-12 position-relative employee-input">
+                            <label class="form-label fw-semibold">{{ form.employee_name.label }} <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input class="form-control" id="employee_name" name="employee_name" placeholder="Type to search or tap to browse..." value="{{ form.employee_name.value|default:'' }}" autocomplete="off" required style="background-color: white; color: #0f172a; border: 2px solid #e2e8f0; padding: 0.875rem 1rem; font-size: 0.95rem;">
+                                <button class="btn btn-outline-secondary" type="button" id="employee_toggle" title="Show all" style="border-width: 2px;">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div id="employee-suggestions" class="list-group" role="listbox" style="position: absolute; max-height: 260px; display: none;">
+                                <!-- suggestions injected here -->
+                            </div>
+                            {% for error in form.employee_name.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text mt-1">Tap the arrow to browse all, or start typing to filter.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">{{ form.purpose.label }} <span class="text-danger">*</span></label>
+                            {{ form.purpose }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">{{ form.phone.label }} <span class="text-danger">*</span></label>
+                            {{ form.phone }}
+                        </div>
+                    </div>
+                    <div class="mt-5 d-flex justify-content-center">
+                        <button class="btn btn-primary btn-lg" type="submit" {% if active_visit %}disabled{% endif %} style="min-width: 200px; padding: 1rem 2rem;">
+                            <i class="fas fa-play me-2"></i>Start Visit
+                        </button>
+                    </div>
+                </form>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{ employees|json_script:"employees-data" }}
+<script>
+    (function(){
+        // Mobile-friendly employee autocomplete
+        const __raw = document.getElementById('employees-data');
+        const EMPLOYEES = (__raw ? JSON.parse(__raw.textContent || '[]') : []).map(e => ({ name: e.name || '', dept: e.department || '' }));
+        // Sort alphabetically by name (case-insensitive)
+        EMPLOYEES.sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }));
+        const input = document.getElementById('employee_name');
+        const list = document.getElementById('employee-suggestions');
+        const toggleBtn = document.getElementById('employee_toggle');
+        function hideList(){ if (list) list.style.display = 'none'; }
+        function showList(){ if (list && list.children.length) list.style.display = 'block'; }
+        function render(items){
+            if (!list) return;
+            list.innerHTML = '';
+            items.slice(0, 20).forEach((item, idx) => {
+                const div = document.createElement('button');
+                div.type = 'button';
+                div.className = 'list-group-item list-group-item-action';
+                div.setAttribute('role', 'option');
+                div.setAttribute('aria-selected', idx === 0 ? 'true' : 'false');
+                div.textContent = item.dept ? (item.name + ' (' + item.dept + ')') : item.name;
+                div.addEventListener('click', () => {
+                    input.value = item.name;
+                    hideList();
+                    input.blur();
+                });
+                list.appendChild(div);
+            });
+            if (!items.length) {
+                const empty = document.createElement('div');
+                empty.className = 'list-group-item text-muted';
+                empty.textContent = 'No matches';
+                list.appendChild(empty);
+            }
+            showList();
+        }
+        function filter(query){
+            const q = (query || '').toLowerCase();
+            if (!q) { render(EMPLOYEES); return; }
+            const results = EMPLOYEES.filter(e => (e.name || '').toLowerCase().includes(q) || (e.dept || '').toLowerCase().includes(q));
+            render(results);
+        }
+        if (input && list) {
+            input.addEventListener('input', e => filter(e.target.value));
+            input.addEventListener('focus', e => filter(e.target.value));
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    if (list.style.display === 'block') { hideList(); return; }
+                    render(EMPLOYEES);
+                    input.focus();
+                });
+            }
+            document.addEventListener('click', (ev) => {
+                if (!list.contains(ev.target) && ev.target !== input) hideList();
+            }, true);
+            // Basic keyboard support
+            input.addEventListener('keydown', (e) => {
+                if (list.style.display !== 'block') return;
+                const items = Array.from(list.querySelectorAll('.list-group-item-action'));
+                if (!items.length) return;
+                const current = document.activeElement;
+                const idx = items.indexOf(current);
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    (items[idx + 1] || items[0]).focus();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    (items[idx - 1] || items[items.length - 1]).focus();
+                } else if (e.key === 'Enter' && current && current.classList.contains('list-group-item-action')) {
+                    e.preventDefault();
+                    current.click();
+                }
+            });
+        }
+        function startBannerTimer(){
+            if (window.__vmTimerStarted) return;
+            const el = document.getElementById('banner-timer');
+            if (!el) return;
+            const startedAt = '{{ active_visit.started_at|date:"c" }}';
+            if (!startedAt) return;
+            window.__vmTimerStarted = true;
+            const started = new Date(startedAt).getTime();
+            function tick(){
+                const now = Date.now();
+                const diff = Math.max(0, Math.floor((now - started)/1000));
+                const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+                const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+                const s = String(diff % 60).padStart(2, '0');
+                el.textContent = h + ":" + m + ":" + s;
+                requestAnimationFrame(tick);
+            }
+            tick();
+        }
+
+        startBannerTimer();
+        window.addEventListener('pageshow', function(){
+            window.__vmTimerStarted = false;
+            startBannerTimer();
+        });
+        document.addEventListener('visibilitychange', function(){
+            if (document.visibilityState === 'visible') {
+                startBannerTimer();
+            }
+        });
+
+        // AJAX send OTP
+        const sendBtn = document.getElementById('send-otp-btn');
+        const form = document.getElementById('intake-form');
+        const emailError = document.getElementById('email-error');
+        const otpFeedback = document.getElementById('otp-feedback');
+        if (sendBtn) {
+            sendBtn.addEventListener('click', async function(){
+                emailError.textContent = '';
+                // hide OTP block until we successfully send
+                const otpBlock = document.getElementById('otp-block');
+                if (otpBlock) otpBlock.classList.add('d-none');
+                if (otpFeedback) { otpFeedback.className = 'd-none'; otpFeedback.textContent = ''; }
+                const formData = new FormData(form);
+                formData.set('action', 'send_otp');
+                const csrf = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+                const emailVal = (formData.get('email') || '').toString().trim();
+                if (!emailVal) {
+                    emailError.textContent = 'Enter an email address first';
+                    return;
+                }
+                sendBtn.disabled = true;
+                sendBtn.textContent = 'Sending…';
+                try {
+                    const res = await fetch('', {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrf },
+                        body: formData
+                    });
+                    const data = await res.json();
+                    if (!res.ok || !data.ok) {
+                        emailError.textContent = (data && data.error) ? data.error : 'Failed to send OTP';
+                        sendBtn.disabled = false;
+                        sendBtn.textContent = 'Send OTP';
+                        return;
+                    }
+                    // success: show OTP block + success message
+                    if (otpBlock) otpBlock.classList.remove('d-none');
+                    if (otpFeedback) { otpFeedback.className = 'alert alert-success mt-2 py-2'; otpFeedback.textContent = 'OTP sent to your email.'; }
+                    
+                    // small cooldown to avoid spamming (only on success)
+                    let seconds = 30;
+                    sendBtn.textContent = 'Resend in ' + seconds + 's';
+                    const interval = setInterval(() => {
+                        seconds -= 1;
+                        sendBtn.textContent = seconds > 0 ? ('Resend in ' + seconds + 's') : 'Send OTP';
+                        if (seconds <= 0) {
+                            clearInterval(interval);
+                            sendBtn.disabled = false;
+                        }
+                    }, 1000);
+                } catch (e) {
+                    emailError.textContent = 'Network error. Try again.';
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Send OTP';
+                }
+            });
+        }
+    })();
+
+    // Theme Switcher Functionality
+    (function() {
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const body = document.body;
+        
+        // Get saved theme or default to light
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        
+        // Apply saved theme
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                body.setAttribute('data-theme', 'dark');
+                themeIcon.className = 'fas fa-sun';
+                themeToggle.title = 'Switch to Light Theme';
+            } else {
+                body.removeAttribute('data-theme');
+                themeIcon.className = 'fas fa-moon';
+                themeToggle.title = 'Switch to Dark Theme';
+            }
+        }
+        
+        // Initialize theme
+        applyTheme(savedTheme);
+        
+        // Theme toggle handler
+        themeToggle.addEventListener('click', function() {
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            // Save theme preference
+            localStorage.setItem('theme', newTheme);
+            
+            // Apply new theme
+            applyTheme(newTheme);
+            
+            // Add a subtle animation effect
+            body.style.transition = 'all 0.3s ease';
+            setTimeout(() => {
+                body.style.transition = '';
+            }, 300);
+        });
+    })();
+    </script>
+</body>
+</html>
+
+

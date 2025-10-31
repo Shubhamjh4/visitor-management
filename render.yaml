@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: visitor-management
+    env: python
+    buildCommand: pip install -r requirements.txt && cd visitor_portal && python manage.py collectstatic --noinput && python manage.py migrate
+    startCommand: cd visitor_portal && gunicorn visitor_portal.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: DATABASE_URL
+        fromDatabase:
+          name: visitor-db
+          property: connectionString
+      - key: ALLOWED_HOSTS
+        value: visitor-management.onrender.com
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+
+databases:
+  - name: visitor-db
+    databaseName: visitor_db
+    user: visitor_user
+    plan: free
+

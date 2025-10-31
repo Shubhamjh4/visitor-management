@@ -1,0 +1,475 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Visits Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <style>
+        #searchInput::placeholder {
+            color: #64748b !important;
+            opacity: 1 !important;
+            font-size: 0.95rem !important;
+        }
+        
+        #searchInput::-webkit-input-placeholder {
+            color: #64748b !important;
+            opacity: 1 !important;
+        }
+        
+        #searchInput::-moz-placeholder {
+            color: #64748b !important;
+            opacity: 1 !important;
+        }
+        
+        #searchInput:-ms-input-placeholder {
+            color: #64748b !important;
+            opacity: 1 !important;
+        }
+        #searchInput {
+            background-color: white !important;
+            color: #0f172a !important;
+            border: 2px solid #e2e8f0 !important;
+            --placeholder-color: #64748b !important;
+        }
+        
+        #searchInput::placeholder {
+            color: #64748b !important;
+            opacity: 1 !important;
+            font-size: 0.95rem !important;
+        }
+        
+        /* Force placeholder to show */
+        input[type="text"]::placeholder {
+            color: #64748b !important;
+            opacity: 1 !important;
+        }
+        
+        .form-control::placeholder {
+            color: #64748b !important;
+            opacity: 1 !important;
+        }
+        #searchInput:focus {
+            background-color: #dbeafe !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+        }
+        [data-theme="dark"] #searchInput::placeholder {
+            color: #cbd5e1 !important;
+            opacity: 0.8 !important;
+        }
+        [data-theme="dark"] #searchInput {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border: 2px solid #475569 !important;
+        }
+        [data-theme="dark"] #searchInput:focus {
+            background-color: #1e3a8a !important;
+            border-color: #3b82f6 !important;
+        }
+        
+        /* Mobile responsiveness for search section */
+        @media (max-width: 768px) {
+            .row.g-4.align-items-end {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 1rem !important;
+            }
+            
+            .row.g-4.align-items-end > div {
+                margin-bottom: 0 !important;
+                width: 100% !important;
+                flex: none !important;
+            }
+            
+            /* Search section mobile */
+            .col-md-6 {
+                margin-bottom: 1rem !important;
+                width: 100% !important;
+            }
+            
+            #searchInput {
+                font-size: 16px !important; /* Prevents zoom on iOS */
+                padding: 0.75rem 1rem !important;
+                border-radius: 8px !important;
+                width: 100% !important;
+            }
+            
+            #clearSearch {
+                padding: 0.75rem 1rem !important;
+                font-size: 0.9rem !important;
+                border-radius: 0 8px 8px 0 !important;
+            }
+            
+            /* Month filter mobile */
+            .col-md-4 {
+                margin-bottom: 1rem !important;
+                width: 100% !important;
+            }
+            
+            #monthFilter {
+                font-size: 16px !important; /* Prevents zoom on iOS */
+                padding: 0.75rem 1rem !important;
+                border-radius: 8px !important;
+                width: 100% !important;
+            }
+            
+            /* Clear button mobile */
+            .col-md-2 {
+                margin-bottom: 0 !important;
+                width: 100% !important;
+            }
+            
+            #clearFilters {
+                width: 100% !important;
+                padding: 0.75rem 1rem !important;
+                font-size: 0.9rem !important;
+                border-radius: 8px !important;
+                margin-top: 0.5rem !important;
+            }
+            
+            /* Card body mobile */
+            .card-body {
+                padding: 1rem !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light">
+<!-- Theme Switcher -->
+<div class="theme-switcher">
+    <button class="theme-toggle-btn" id="themeToggle" title="Toggle Theme">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+</div>
+
+<div class="container py-4 vm-surface-wrap vm-surface-wrap--tint">
+    <div class="vm-surface-inner">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <img src="{% static 'img/logo.png' %}" alt="Logo" style="max-height:48px;" class="rounded">
+            <div>
+                <h3 class="m-0 fw-bold">Guard Dashboard</h3>
+                <small class="text-muted">Monitor visitor activities</small>
+            </div>
+        </div>
+        <div class="ms-auto d-flex gap-2">
+            <a class="btn btn-primary" href="{% url 'intake' %}">
+                <i class="fas fa-plus me-1"></i>New Visit
+            </a>
+            {% if user.is_superuser %}
+            <a class="btn btn-outline-warning" href="/admin/" target="_blank">
+                <i class="fas fa-cog me-1"></i>Admin Panel
+            </a>
+            {% endif %}
+            <a class="btn btn-outline-primary" href="{% url 'password_change' %}">
+                <i class="fas fa-key me-1"></i>Change Password
+            </a>
+            <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-secondary">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </button>
+            </form>
+        </div>
+    </div>
+    <div class="vm-hr"></div>
+
+    <!-- Search and Filter Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="vm-card">
+                <div class="card-body" style="padding: 1.5rem;">
+                    <div class="row g-4 align-items-end" style="display: flex; flex-wrap: wrap;">
+                        <div class="col-md-6 col-12" style="margin-bottom: 1rem;">
+                            <label for="searchInput" class="form-label fw-semibold mb-2">
+                                <i class="fas fa-search me-1"></i>Search Visits
+                            </label>
+                            <div class="input-group mb-2">
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="searchInput" 
+                                       placeholder="Search by visitor name, phone, employee, department, or purpose..."
+                                       value=""
+                                       autocomplete="off"
+                                       style="background-color: white !important; color: #0f172a !important; border: 2px solid #e2e8f0 !important; padding: 0.875rem 1rem !important; font-size: 0.95rem !important;"
+                                       onfocus="this.style.borderColor='#3b82f6'; this.style.backgroundColor='#dbeafe';"
+                                       onblur="this.style.borderColor='#e2e8f0'; this.style.backgroundColor='white';">
+                                <button class="btn btn-outline-secondary" type="button" id="clearSearch" title="Clear search" style="padding: 0.875rem 1rem;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Search will update results as you type</div>
+                        </div>
+                        <div class="col-md-4 col-12" style="margin-bottom: 1rem;">
+                            <label for="monthFilter" class="form-label fw-semibold mb-2">
+                                <i class="fas fa-calendar me-1"></i>Filter by Month
+                            </label>
+                            <select class="form-select" id="monthFilter" style="padding: 0.875rem 1rem; font-size: 0.95rem; width: 100%;">
+                                <option value="">All Months</option>
+                                {% for month in available_months %}
+                                <option value="{{ month.value }}" {% if month_filter == month.value %}selected{% endif %}>
+                                    {{ month.label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2 col-12" style="margin-bottom: 0;">
+                            <button class="btn btn-outline-primary" id="clearFilters" style="padding: 0.875rem 1rem; font-size: 0.9rem; width: 100%;">
+                                <i class="fas fa-filter-circle-xmark me-1"></i>Clear All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 align-items-stretch">
+        <div class="col-md-6">
+            <div class="vm-card">
+                <div class="card-header bg-primary text-white d-flex align-items-center">
+                    <i class="fas fa-clock me-2"></i>
+                    <span class="fw-bold">Ongoing Visits</span>
+                    <span class="vm-badge vm-badge-info ms-auto" id="ongoingCount">{{ ongoing|length }}</span>
+                </div>
+                <div class="card-body p-0" id="ongoingVisits">
+                    {% for v in ongoing %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="vm-badge vm-badge-success me-3">
+                                <i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i>Active
+                            </div>
+                            <div>
+                                <div class="fw-semibold">{{ v.visitor.full_name }}</div>
+                                <small class="text-muted">Meeting with {{ v.employee.name }}</small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'guard_visit_detail' v.id %}">
+                                <i class="fas fa-eye me-1"></i>Details
+                            </a>
+                            <a class="btn btn-sm btn-primary" href="{% url 'visit_detail' v.id %}">
+                                <i class="fas fa-external-link-alt me-1"></i>Open
+                            </a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item text-center py-4">
+                        <i class="fas fa-inbox text-muted mb-2" style="font-size: 2rem;"></i>
+                        <div class="text-muted">No ongoing visits</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="d-none d-md-flex col-md-0 justify-content-center">
+            <div class="vm-vr"></div>
+        </div>
+        <div class="col-md-6">
+            <div class="vm-card">
+                <div class="card-header bg-secondary text-white d-flex align-items-center">
+                    <i class="fas fa-history me-2"></i>
+                    <span class="fw-bold">Recent Visits</span>
+                    <span class="vm-badge vm-badge-info ms-auto" id="recentCount">{{ recent|length }}</span>
+                </div>
+                <div class="card-body p-0" id="recentVisits">
+                    {% for v in recent %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="vm-badge vm-badge-warning me-3">
+                                <i class="fas fa-check me-1" style="font-size: 0.5rem;"></i>Completed
+                            </div>
+                            <div>
+                                <div class="fw-semibold">{{ v.visitor.full_name }}</div>
+                                <small class="text-muted">with {{ v.employee.name }}</small>
+                                <div class="small text-muted">{{ v.started_at|date:"M d, H:i" }} - {{ v.ended_at|date:"H:i" }}</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'guard_visit_detail' v.id %}">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item text-center py-4">
+                        <i class="fas fa-history text-muted mb-2" style="font-size: 2rem;"></i>
+                        <div class="text-muted">No recent visits</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+<script>
+// Theme Switcher Functionality
+(function() {
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const body = document.body;
+    
+    // Get saved theme or default to light
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    
+    // Apply saved theme
+    function applyTheme(theme) {
+        if (theme === 'dark') {
+            body.setAttribute('data-theme', 'dark');
+            themeIcon.className = 'fas fa-sun';
+            themeToggle.title = 'Switch to Light Theme';
+        } else {
+            body.removeAttribute('data-theme');
+            themeIcon.className = 'fas fa-moon';
+            themeToggle.title = 'Switch to Dark Theme';
+        }
+    }
+    
+    // Initialize theme
+    applyTheme(savedTheme);
+    
+    // Theme toggle handler
+    themeToggle.addEventListener('click', function() {
+        const currentTheme = body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        // Save theme preference
+        localStorage.setItem('theme', newTheme);
+        
+        // Apply new theme
+        applyTheme(newTheme);
+        
+        // Add a subtle animation effect
+        body.style.transition = 'all 0.3s ease';
+        setTimeout(() => {
+            body.style.transition = '';
+        }, 300);
+    });
+})();
+
+// Search and Filter Functionality
+(function() {
+    const searchInput = document.getElementById('searchInput');
+    const monthFilter = document.getElementById('monthFilter');
+    const clearSearch = document.getElementById('clearSearch');
+    const clearFilters = document.getElementById('clearFilters');
+    const ongoingVisits = document.getElementById('ongoingVisits');
+    const recentVisits = document.getElementById('recentVisits');
+    const ongoingCount = document.getElementById('ongoingCount');
+    const recentCount = document.getElementById('recentCount');
+    
+    let searchTimeout;
+    
+    // Function to perform search and filter
+    function performSearch() {
+        const searchQuery = searchInput.value.trim();
+        const monthValue = monthFilter.value;
+        
+        // Show loading state
+        ongoingVisits.innerHTML = '<div class="list-group-item text-center py-4"><i class="fas fa-spinner fa-spin text-muted mb-2" style="font-size: 2rem;"></i><div class="text-muted">Searching...</div></div>';
+        recentVisits.innerHTML = '<div class="list-group-item text-center py-4"><i class="fas fa-spinner fa-spin text-muted mb-2" style="font-size: 2rem;"></i><div class="text-muted">Searching...</div></div>';
+        
+        // Build URL with parameters
+        const params = new URLSearchParams();
+        if (searchQuery) params.append('search', searchQuery);
+        if (monthValue) params.append('month', monthValue);
+        
+        const url = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+        
+        // Make AJAX request
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update ongoing visits
+            ongoingVisits.innerHTML = data.ongoing_html;
+            ongoingCount.textContent = data.ongoing_count;
+            
+            // Update recent visits
+            recentVisits.innerHTML = data.recent_html;
+            recentCount.textContent = data.recent_count;
+            
+            // Update URL without page reload
+            window.history.pushState({}, '', url);
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+            ongoingVisits.innerHTML = '<div class="list-group-item text-center py-4"><i class="fas fa-exclamation-triangle text-warning mb-2" style="font-size: 2rem;"></i><div class="text-muted">Error loading results</div></div>';
+            recentVisits.innerHTML = '<div class="list-group-item text-center py-4"><i class="fas fa-exclamation-triangle text-warning mb-2" style="font-size: 2rem;"></i><div class="text-muted">Error loading results</div></div>';
+        });
+    }
+    
+    // Search input with debouncing
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(performSearch, 300); // 300ms delay
+    });
+    
+    // Force placeholder to be visible
+    function ensurePlaceholder() {
+        if (searchInput.value === '') {
+            searchInput.placeholder = 'Search by visitor name, phone, employee, department, or purpose...';
+            searchInput.style.setProperty('--placeholder-color', '#64748b');
+        }
+    }
+    
+    // Ensure placeholder is visible on focus/blur
+    searchInput.addEventListener('focus', ensurePlaceholder);
+    searchInput.addEventListener('blur', ensurePlaceholder);
+    
+    // Force placeholder on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            searchInput.value = '';
+            searchInput.placeholder = 'Search by visitor name, phone, employee, department, or purpose...';
+            searchInput.style.setProperty('color', '#64748b', 'important');
+        }, 100);
+    });
+    
+    // Also run immediately
+    setTimeout(function() {
+        searchInput.value = '';
+        searchInput.placeholder = 'Search by visitor name, phone, employee, department, or purpose...';
+    }, 100);
+    
+    // Month filter change
+    monthFilter.addEventListener('change', performSearch);
+    
+    // Clear search button
+    clearSearch.addEventListener('click', function() {
+        searchInput.value = '';
+        performSearch();
+    });
+    
+    // Clear all filters button
+    clearFilters.addEventListener('click', function() {
+        searchInput.value = '';
+        monthFilter.value = '';
+        performSearch();
+    });
+    
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        searchInput.value = urlParams.get('search') || '';
+        monthFilter.value = urlParams.get('month') || '';
+        performSearch();
+    });
+})();
+</script>
+</body>
+</html>
+
+
