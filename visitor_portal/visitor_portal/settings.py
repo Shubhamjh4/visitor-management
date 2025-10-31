@@ -115,6 +115,11 @@ if DATABASE_URL:
             conn_health_checks=True,
         )
     }
+    # Optimize for free tier hosting
+    DATABASES['default']['OPTIONS'] = {
+        'connect_timeout': 10,
+        'options': '-c statement_timeout=30000'
+    }
 else:
     # Development: Use SQLite
     DATABASES = {
