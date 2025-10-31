@@ -199,8 +199,8 @@ EMAIL_HOST = 'smtp.gmail.com'  # Gmail SMTP server
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_TIMEOUT = 10  # Timeout after 10 seconds
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'kars4r2@gmail.com')  # Your email address
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'Cursor@1234')  # Your email app password
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')  # Your email address
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')  # Your email app password
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)  # Use EMAIL_HOST_USER as default
 
 # Password reset settings
