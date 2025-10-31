@@ -1,11 +1,28 @@
 import os
+import threading
 from typing import Optional
 from django.core.mail import send_mail
 from django.conf import settings
 
 
+def _send_email_async(to_email: str, subject: str, message: str):
+    """Send email in background thread."""
+    try:
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[to_email.strip()],
+            fail_silently=True,  # Don't raise exception in background
+        )
+        print(f"Email sent successfully to {to_email}")
+    except Exception as e:
+        # If email fails, log it but don't crash
+        print(f"Email sending failed to {to_email}: {e}")
+
+
 def send_email_notification(to_email: str, subject: str, message: str) -> Optional[str]:
-    """Send email notification.
+    """Send email notification (non-blocking).
     
     Args:
         to_email: Email address to send to
@@ -13,25 +30,21 @@ def send_email_notification(to_email: str, subject: str, message: str) -> Option
         message: Email body content
     
     Returns:
-        'sent' if successful, None otherwise
+        'sent' immediately (email sends in background)
     """
     if not to_email or not to_email.strip():
         return None
     
-    # In development, if using console backend, it will print to console
-    try:
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[to_email.strip()],
-            fail_silently=False,
-        )
-        return 'sent'
-    except Exception as e:
-        # If email fails, log it but don't crash
-        print(f"Email sending failed: {e}")
-        return None
+    # Send email in background thread so request returns immediately
+    thread = threading.Thread(
+        target=_send_email_async,
+        args=(to_email.strip(), subject, message),
+        daemon=True
+    )
+    thread.start()
+    
+    # Return immediately - email sending happens in background
+    return 'sent'
 
 
 def send_otp_email(to_email: str, otp_code: str) -> Optional[str]:
