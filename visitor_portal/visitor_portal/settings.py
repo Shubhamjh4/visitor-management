@@ -108,18 +108,22 @@ DATABASE_URL = os.getenv('DATABASE_URL', '')
 if DATABASE_URL:
     # Parse DATABASE_URL (format: postgres://user:password@host:port/database)
     import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
-    # Optimize for free tier hosting
-    DATABASES['default']['OPTIONS'] = {
-        'connect_timeout': 10,
-        'options': '-c statement_timeout=30000'
-    }
+    
+    # Ensure SSL is in connection string for Neon
+    if 'sslmode=' not in DATABASE_URL:
+        if '?' in DATABASE_URL:
+            DATABASE_URL = f"{DATABASE_URL}&sslmode=require"
+        else:
+            DATABASE_URL = f"{DATABASE_URL}?sslmode=require"
+    
+    # Neon requires SSL and doesn't support statement_timeout in pooled connections
+    db_config = dj_database_url.config(
+        default=DATABASE_URL,
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+    
+    DATABASES = {'default': db_config}
 else:
     # Development: Use SQLite
     DATABASES = {
