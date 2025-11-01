@@ -1,35 +1,44 @@
 import os
 import threading
+import requests
 from typing import Optional
-from django.core.mail import send_mail
 from django.conf import settings
 
 
 def _send_email_async(to_email: str, subject: str, message: str):
-    """Send email in background thread."""
+    """Send email in background thread using Resend API."""
     try:
-        # Use EMAIL_HOST_USER as FROM if DEFAULT_FROM_EMAIL is different domain
-        # Gmail won't send emails claiming to be from different domains
-        from_email = settings.DEFAULT_FROM_EMAIL
-        if settings.EMAIL_HOST_USER and '@gmail.com' in settings.EMAIL_HOST_USER:
-            # If using Gmail, FROM must match Gmail domain
-            if '@gmail.com' not in from_email:
-                from_email = settings.EMAIL_HOST_USER
-                print(f"WARNING: Changed FROM email to {from_email} (Gmail requires matching domain)")
+        api_key = settings.RESEND_API_KEY
+        if not api_key:
+            print(f"❌ RESEND_API_KEY not set - email not sent to {to_email}")
+            return
         
-        result = send_mail(
-            subject=subject,
-            message=message,
-            from_email=from_email,
-            recipient_list=[to_email.strip()],
-            fail_silently=False,  # Show errors properly
-        )
-        print(f"✅ Email sent successfully to {to_email} (FROM: {from_email})")
+        from_email = settings.DEFAULT_FROM_EMAIL
+        
+        # Resend API call
+        url = "https://api.resend.com/emails"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "from": from_email,
+            "to": [to_email.strip()],
+            "subject": subject,
+            "text": message
+        }
+        
+        response = requests.post(url, json=data, headers=headers, timeout=10)
+        
+        if response.status_code == 200:
+            print(f"✅ Email sent successfully to {to_email} via Resend (FROM: {from_email})")
+        else:
+            print(f"❌ Email sending FAILED to {to_email}: {response.status_code} - {response.text}")
+            
     except Exception as e:
         # Log detailed error
         print(f"❌ Email sending FAILED to {to_email}: {str(e)}")
         print(f"   FROM: {settings.DEFAULT_FROM_EMAIL}")
-        print(f"   EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}")
 
 
 def send_email_notification(to_email: str, subject: str, message: str) -> Optional[str]:
