@@ -45,28 +45,38 @@
 	--vm-shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
 }
 
-/* Smooth animations and transitions */
+/* Smooth animations and transitions - optimized for mobile */
+/* Removed global transition to prevent lag - only apply to specific elements */
 * {
-	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	/* transition removed for better mobile performance */
 }
 
 html, body { 
 	height: 100%; 
 	scroll-behavior: smooth;
+	-webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+	overflow-scrolling: touch;
+}
+
+/* Optimize scrolling containers for better mobile performance */
+.card-body, .list-group, #ongoingVisits, #recentVisits {
+	transform: translateZ(0); /* Force GPU acceleration */
+	will-change: scroll-position;
+	-webkit-overflow-scrolling: touch;
 }
 
 body {
 	font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
 	color: var(--vm-text);
 	background:
-		/* animated grid lines */
+		/* Static grid (removed animation for mobile performance) */
 		linear-gradient(0deg, rgba(15,23,42,0.03) 1px, transparent 1px),
 		linear-gradient(90deg, rgba(15,23,42,0.03) 1px, transparent 1px),
-		/* enhanced gradient wash */
+		/* Static gradient wash (removed animation for mobile) */
 		linear-gradient(135deg, var(--vm-bg) 0%, var(--vm-bg-2) 50%, var(--vm-bg) 100%);
 	background-size: 32px 32px, 32px 32px, auto;
 	background-position: top left, top left, center;
-	animation: backgroundShift 20s ease-in-out infinite;
+	/* animation removed for better mobile performance */
 }
 
 /* Dark theme specific background */
@@ -79,7 +89,7 @@ body {
 		linear-gradient(135deg, var(--vm-bg) 0%, var(--vm-bg-2) 50%, var(--vm-bg) 100%);
 	background-size: 32px 32px, 32px 32px, auto;
 	background-position: top left, top left, center;
-	animation: backgroundShift 20s ease-in-out infinite;
+	/* animation removed for better mobile performance */
 }
 
 @keyframes backgroundShift {
@@ -929,6 +939,10 @@ body {
         flex-direction: column;
         align-items: flex-start !important;
         gap: 0.75rem;
+        /* Performance optimizations for smooth scrolling */
+        will-change: transform;
+        contain: layout style paint;
+        transform: translateZ(0); /* GPU acceleration */
     }
     
     .list-group-item .d-flex.gap-2 {
@@ -1025,15 +1039,27 @@ body {
     .btn, .btn-sm {
         min-height: 44px;
         padding: 0.75rem 1rem;
+        /* Optimize for touch - reduce repaints */
+        transform: translateZ(0);
+        will-change: auto;
     }
     
     .list-group-item {
         min-height: 60px;
+        /* Prevent touch lag */
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
     }
     
     /* Larger touch targets for interactive elements */
     input[type="file"] {
         min-height: 44px;
+    }
+    
+    /* Optimize all interactive elements */
+    a, button, input, select, textarea {
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
     }
 }
 

@@ -179,6 +179,13 @@ STATICFILES_DIRS = [
 # WhiteNoise for serving static files in production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# WhiteNoise compression and caching settings for better mobile performance
+WHITENOISE_AUTOREFRESH = False
+WHITENOISE_USE_FINDERS = False
+
+# Add caching headers for static files (better mobile performance)
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+
 # Media uploads (visitor photos and IDs)
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'

@@ -252,9 +252,21 @@ def dashboard(request):
         ongoing_base = ongoing_base.filter(search_filter)
         recent_base = recent_base.filter(search_filter)
     
-    # Final querysets
-    ongoing = ongoing_base.order_by("-started_at")
-    recent = recent_base.order_by("-ended_at")[:20]
+    # Final querysets - optimize with select_related for faster queries
+    # Smart limiting based on filters
+    has_filters = bool(search_query or month_filter)
+    
+    # Ongoing visits: Always show all (critical for monitoring active visits)
+    # But cap at 100 to prevent performance issues
+    ongoing = ongoing_base.select_related('visitor', 'employee').order_by("-started_at")[:100]
+    
+    # Recent visits: Limit on initial load, show more when filtering
+    if has_filters:
+        # When filtering/searching: show up to 100 results
+        recent = recent_base.select_related('visitor', 'employee').order_by("-ended_at")[:100]
+    else:
+        # Initial load: limit to 20 for mobile performance
+        recent = recent_base.select_related('visitor', 'employee').order_by("-ended_at")[:20]
     
     # Get available months for filter dropdown
     available_months = []

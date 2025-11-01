@@ -412,9 +412,12 @@
     }
     
     // Search input with debouncing
+    // Optimized search with longer debounce for mobile
     searchInput.addEventListener('input', function() {
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(performSearch, 300); // 300ms delay
+        // Increase delay for mobile to reduce lag
+        const isMobile = window.innerWidth <= 768;
+        searchTimeout = setTimeout(performSearch, isMobile ? 500 : 300);
     });
     
     // Force placeholder to be visible
