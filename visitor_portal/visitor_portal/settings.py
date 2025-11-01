@@ -194,9 +194,9 @@ LOGIN_REDIRECT_URL = '/control/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 # Email configuration for OTP and notifications
-# Render doesn't support SMTP, so we use Resend API (completely free)
-RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'onboarding@resend.dev')  # Default Resend email
+# Render doesn't support SMTP, so we use Brevo API (free, no domain required)
+BREVO_API_KEY = os.getenv('BREVO_API_KEY', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@eterna.com')
 
 # Password reset settings   
 PASSWORD_RESET_TIMEOUT = 3600  # 1 hour

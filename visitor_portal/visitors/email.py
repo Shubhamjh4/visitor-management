@@ -1,42 +1,44 @@
 import os
 import threading
-import requests
 from typing import Optional
 from django.conf import settings
 
 
 def _send_email_async(to_email: str, subject: str, message: str):
-    """Send email in background thread using Resend API."""
+    """Send email in background thread using Brevo API."""
     try:
-        api_key = settings.RESEND_API_KEY
+        from sib_api_v3_sdk import TransactionalEmailsApi, SendSmtpEmail, SendSmtpEmailSender
+        from sib_api_v3_sdk.rest import ApiException
+        from sib_api_v3_sdk.configuration import Configuration
+        
+        api_key = settings.BREVO_API_KEY
         if not api_key:
-            print(f"❌ RESEND_API_KEY not set - email not sent to {to_email}")
+            print(f"❌ BREVO_API_KEY not set - email not sent to {to_email}")
             return
         
-        from_email = settings.DEFAULT_FROM_EMAIL
+        # Configure Brevo API
+        configuration = Configuration()
+        configuration.api_key['api-key'] = api_key
         
-        # Resend API call
-        url = "https://api.resend.com/emails"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
-        data = {
-            "from": from_email,
-            "to": [to_email.strip()],
-            "subject": subject,
-            "text": message
-        }
+        api_instance = TransactionalEmailsApi()
+        api_instance.api_client.configuration = configuration
         
-        response = requests.post(url, json=data, headers=headers, timeout=10)
+        # Prepare email
+        sender = SendSmtpEmailSender(email=settings.DEFAULT_FROM_EMAIL, name="Eterna Visitor Management")
+        send_smtp_email = SendSmtpEmail(
+            sender=sender,
+            to=[{"email": to_email.strip()}],
+            subject=subject,
+            text_content=message
+        )
         
-        if response.status_code == 200:
-            print(f"✅ Email sent successfully to {to_email} via Resend (FROM: {from_email})")
-        else:
-            print(f"❌ Email sending FAILED to {to_email}: {response.status_code} - {response.text}")
+        # Send email
+        api_response = api_instance.send_transac_email(send_smtp_email)
+        print(f"✅ Email sent successfully to {to_email} via Brevo (Message ID: {api_response.message_id})")
             
+    except ApiException as e:
+        print(f"❌ Email sending FAILED to {to_email}: {e.status} - {e.body}")
     except Exception as e:
-        # Log detailed error
         print(f"❌ Email sending FAILED to {to_email}: {str(e)}")
         print(f"   FROM: {settings.DEFAULT_FROM_EMAIL}")
 
