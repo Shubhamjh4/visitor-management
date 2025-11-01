@@ -196,9 +196,11 @@ LOGOUT_REDIRECT_URL = '/login/'
 # Email configuration for OTP and notifications
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  # Gmail SMTP server
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_TIMEOUT = 10  # Timeout after 10 seconds
+# Try port 465 with SSL (Render free tier may block port 587)
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '465'))
+EMAIL_USE_TLS = False  # Port 465 uses SSL, not TLS
+EMAIL_USE_SSL = True  # Use SSL for port 465
+EMAIL_TIMEOUT = 30  # Increase timeout for slow connections
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')  # Your email address
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')  # Your email app password
 # Use EMAIL_HOST_USER if DEFAULT_FROM_EMAIL not set (Gmail requires matching domain)
