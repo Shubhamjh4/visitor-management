@@ -8,17 +8,28 @@ from django.conf import settings
 def _send_email_async(to_email: str, subject: str, message: str):
     """Send email in background thread."""
     try:
-        send_mail(
+        # Use EMAIL_HOST_USER as FROM if DEFAULT_FROM_EMAIL is different domain
+        # Gmail won't send emails claiming to be from different domains
+        from_email = settings.DEFAULT_FROM_EMAIL
+        if settings.EMAIL_HOST_USER and '@gmail.com' in settings.EMAIL_HOST_USER:
+            # If using Gmail, FROM must match Gmail domain
+            if '@gmail.com' not in from_email:
+                from_email = settings.EMAIL_HOST_USER
+                print(f"WARNING: Changed FROM email to {from_email} (Gmail requires matching domain)")
+        
+        result = send_mail(
             subject=subject,
             message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            from_email=from_email,
             recipient_list=[to_email.strip()],
-            fail_silently=True,  # Don't raise exception in background
+            fail_silently=False,  # Show errors properly
         )
-        print(f"Email sent successfully to {to_email}")
+        print(f"✅ Email sent successfully to {to_email} (FROM: {from_email})")
     except Exception as e:
-        # If email fails, log it but don't crash
-        print(f"Email sending failed to {to_email}: {e}")
+        # Log detailed error
+        print(f"❌ Email sending FAILED to {to_email}: {str(e)}")
+        print(f"   FROM: {settings.DEFAULT_FROM_EMAIL}")
+        print(f"   EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}")
 
 
 def send_email_notification(to_email: str, subject: str, message: str) -> Optional[str]:
