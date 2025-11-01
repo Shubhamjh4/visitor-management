@@ -202,7 +202,8 @@ EMAIL_TIMEOUT = 10  # Timeout after 10 seconds
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')  # Your email address
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')  # Your email app password
 # Use EMAIL_HOST_USER if DEFAULT_FROM_EMAIL not set (Gmail requires matching domain)
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', '') or os.getenv('EMAIL_HOST_USER', '')
+DEFAULT_FROM_EMAIL_ENV = os.getenv('DEFAULT_FROM_EMAIL', '')
+DEFAULT_FROM_EMAIL = DEFAULT_FROM_EMAIL_ENV if DEFAULT_FROM_EMAIL_ENV else os.getenv('EMAIL_HOST_USER', '')
 
 # Password reset settings   
 PASSWORD_RESET_TIMEOUT = 3600  # 1 hour
