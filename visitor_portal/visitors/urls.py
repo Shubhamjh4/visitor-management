@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import IntakeView, visit_detail, end_visit, dashboard, guard_visit_detail
+from .views import IntakeView, visit_detail, end_visit, dashboard, guard_visit_detail, health_check
 
 
 urlpatterns = [
@@ -9,6 +9,8 @@ urlpatterns = [
     # Custom admin-like dashboard path not visible from public pages
     path("control/", dashboard, name="dashboard"),
     path("control/visit/<int:visit_id>/", guard_visit_detail, name="guard_visit_detail"),
+    # Health check endpoint for keeping service warm
+    path("health/", health_check, name="health_check"),
 ]
 
 

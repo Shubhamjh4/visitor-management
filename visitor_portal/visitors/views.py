@@ -316,4 +316,16 @@ def guard_visit_detail(request, visit_id: int):
     visit = get_object_or_404(Visit, id=visit_id)
     return render(request, "visitors/visit_admin_detail.html", {"visit": visit})
 
+
+def health_check(request):
+    """
+    Lightweight health check endpoint for monitoring services.
+    This endpoint keeps the Render service warm by pinging it every 14 minutes.
+    Does not hit the database to keep it fast and lightweight.
+    """
+    return JsonResponse({
+        "status": "ok",
+        "service": "visitor-management"
+    })
+
 # Create your views here.
